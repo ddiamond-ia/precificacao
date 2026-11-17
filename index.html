@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Precificador Premium de Joias</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              800: '#0B132B',
+              900: '#070C1E',
+              950: '#03060F',
+            },
+            gold: {
+              300: '#F3E5AB',
+              400: '#E5C158',
+              500: '#D4AF37',
+              600: '#AA8C2C',
+              700: '#806921',
+            }
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B132B;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D4AF37;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #E5C158;
+    }
+
+    /* Print Styles for Clean Spec Sheet */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+    }
+    .print-only {
+      display: none;
+    }
+  
+    input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid #e5c158;outline-offset:3px}
+    @media print{main{display:none!important}#printSheet{display:block!important}#notice{display:none!important}}
+    @media(max-width:480px){header h1{font-size:15px!important}header p{font-size:9px!important}#laborContainer>div{flex-wrap:wrap}#laborContainer input:first-child{min-width:120px}}
+  
+    #workshopForm input,#workshopForm select,#measureForm input,#measureForm select{display:block;width:100%;color:#fff;background:#03060f;border:1px solid #475569;border-radius:6px;padding:7px 9px;margin-top:3px}
+    #workshopForm label,#measureForm label{font-size:13px;color:#cbd5e1}
+    .registry-action{background:#d4af37;color:#03060f;border-radius:6px;padding:8px;font-weight:600}
+  </style>
+</head>
+<body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="bg-navy-900 border-b border-gold-500/30 sticky top-0 z-30 backdrop-blur-md bg-opacity-90 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gold-600 to-gold-400 flex items-center justify-center text-navy-950 shadow-lg shadow-gold-500/20">
+          <i class="fa-solid fa-gem text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-wider text-gold-400">ATELIÊ PRECIFICAÇÃO</h1>
+          <p class="text-xs text-slate-400">Sistema de Precificação de Joias & Alta Joalheria</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="saveCurrentPiece()" class="px-3 py-2 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-400 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2">
+          <i class="fa-solid fa-bookmark"></i>
+          <span class="hidden sm:inline">Salvar no Histórico</span>
+        </button>
+        <button onclick="window.print()" class="px-3 py-2 bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs sm:text-sm font-semibold rounded-lg transition-all shadow-md shadow-gold-500/20 flex items-center gap-2">
+          <i class="fa-solid fa-print"></i>
+          <span class="hidden sm:inline">Imprimir Ficha</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 no-print"><div class="flex flex-wrap gap-3 items-center"><button onclick="newPiece()" class="px-4 py-2 rounded-lg border border-gold-500/40 text-gold-300 text-sm">+ Nova peça</button><button onclick="exportHistory()" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm">Exportar histórico CSV</button><span class="text-xs text-slate-400">Cadastros, rascunho e histórico salvos neste navegador.</span></div><p id="notice" role="status" aria-live="polite" class="text-sm text-gold-300 mt-3"></p></div>
+  <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-3 no-print">
+    <div class="grid gap-4 md:grid-cols-2">
+      <details open class="rounded-xl border border-gold-500/30 bg-navy-900 p-4">
+        <summary class="cursor-pointer text-gold-300 font-semibold">Cadastro de ateliês</summary>
+        <form id="workshopForm" class="grid gap-2 mt-3">
+          <label>Nome do ateliê <input name="title" required maxlength="80"></label>
+          <label>Fórmula aplicada <select name="method">
+            <option value="rate">Regra 75% da cotação × (peso + perda)</option>
+            <option value="weight">Fator 0,95 no peso × cotação integral</option>
+          </select></label>
+          <button class="registry-action">Cadastrar ateliê</button>
+        </form>
+      </details>
+      <details open class="rounded-xl border border-gold-500/30 bg-navy-900 p-4">
+        <summary class="cursor-pointer text-gold-300 font-semibold">Cadastro de medidas</summary>
+        <form id="measureForm" class="grid gap-2 mt-3">
+          <label>Medida para editar <select name="existing" id="measureExisting"></select></label>
+          <div class="grid grid-cols-2 gap-2">
+            <label>Ponto <input name="points" inputmode="decimal" placeholder="Ex.: 1,5" required></label>
+            <label>Peso por pedra (ct) <input name="ct" inputmode="decimal" placeholder="Ex.: 0,015" required></label>
+            <label>Medida (mm) <input name="mm" inputmode="decimal" placeholder="Ex.: 1,50" required></label>
+            <label>Valor em dólar (US$/ct) <input name="price" inputmode="decimal" placeholder="Ex.: 260,00" required></label>
+          </div>
+          <button class="registry-action" id="measureSubmit">Cadastrar medida</button>
+        </form>
+      </details>
+    </div>
+  </section>
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- Left Column: Parameters & Form Inputs (7 Cols) -->
+    <div class="lg:col-span-7 space-y-6 no-print">
+
+      <!-- Global Parameters Card -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <h2 class="font-serif text-lg font-semibold text-gold-400 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-sm"></i> Parâmetros de Mercado
+          </h2>
+          <span class="text-xs text-slate-400">Cotações manuais • valores de exemplo</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Cotação Dólar (R$)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-500 text-sm">R$</span>
+              <input type="number" id="globalUsdRate" step="0.01" value="5.30" onchange="calculateAll()" class="w-full bg-navy-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gold-300 font-semibold focus:border-gold-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ouro puro / Grama (R$)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-500 text-sm">R$</span>
+              <input type="number" id="globalGoldPrice" step="1" value="658.00" onchange="calculateAll()" class="w-full bg-navy-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gold-300 font-semibold focus:border-gold-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Markup Padrão (x)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-500 text-sm"><i class="fa-solid fa-xmark text-xs"></i></span>
+              <input type="number" id="globalMarkup" step="0.1" value="3.5" onchange="calculateAll()" class="w-full bg-navy-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gold-300 font-semibold focus:border-gold-500 focus:outline-none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Piece & Workshop Identification -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl space-y-4">
+        <h2 class="font-serif text-lg font-semibold text-gold-400 border-b border-slate-800 pb-3 flex items-center gap-2">
+          <i class="fa-solid fa-ring text-sm"></i> Dados da Peça & Ateliê
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Nome / Descrição da Peça</label>
+            <input type="text" id="pieceName" value="Bracelete / Anel Especial" placeholder="Ex: Anel Dedinho Cachorro" class="w-full bg-navy-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Selecione o Ateliê (Regra do Metal)</label>
+            <select id="workshopSelect" onchange="calculateAll()" class="w-full bg-navy-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-gold-400 font-semibold focus:border-gold-500 focus:outline-none">
+              <option value="Paloma">Ateliê Paloma (Regra 75%)</option>
+              <option value="GUM">Ateliê GUM (Regra 75%)</option>
+              <option value="Altamir">Ateliê Altamir (Regra 75%)</option>
+              <option value="Serginho">Ateliê Serginho (Fator 0.95 no Peso)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Metal Breakdown Input -->
+        <div class="p-4 bg-navy-950/60 rounded-xl border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-gold-400 uppercase tracking-wider">Cálculo do Metal (Ouro 18k)</span>
+            <span id="workshopFormulaBadge" class="text-[10px] bg-gold-500/10 text-gold-300 px-2.5 py-0.5 rounded-full border border-gold-500/30">Fórmula Ateliê Paloma/GUM/Altamir</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Peso Ouro (g)</label>
+              <input type="number" id="metalWeight" step="0.01" value="7.83" oninput="calculateAll()" class="w-full bg-navy-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-500 focus:outline-none">
+            </div>
+
+            <div id="falhaContainer">
+              <label class="block text-xs text-slate-400 mb-1">Falha / Perda de Metal (g)</label>
+              <input type="number" id="metalLoss" step="0.01" value="0.54" oninput="calculateAll()" class="w-full bg-navy-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-500 focus:outline-none">
+            </div>
+          </div>
+
+          <p id="workshopFormulaDesc" class="text-xs text-slate-400 italic">
+            Fórmula: (716.00 x 75%) x (Peso + Falha) = R$ por grama efetivo.
+          </p>
+        </div>
+      </div>
+
+      <!-- Stones Input Section -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="font-serif text-lg font-semibold text-gold-400 flex items-center gap-2">
+            <i class="fa-solid fa-gem text-sm"></i> Gemas & Diamantes
+          </h2>
+          <button onclick="addStoneRow()" class="px-3 py-1.5 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Adicionar Pedra
+          </button>
+        </div>
+
+        <!-- Dynamic Stones List -->
+        <div id="stonesContainer" class="space-y-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Labor & Services Section -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="font-serif text-lg font-semibold text-gold-400 flex items-center gap-2">
+            <i class="fa-solid fa-screwdriver-wrench text-sm"></i> Mão de Obra & Serviços (MO)
+          </h2>
+          <button onclick="addLaborRow()" class="px-3 py-1.5 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Adicionar Serviço
+          </button>
+        </div>
+
+        <!-- Dynamic Labor List -->
+        <div id="laborContainer" class="space-y-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Final Summary & Specs (5 Cols) -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Pricing Result Display Card -->
+      <div class="bg-gradient-to-b from-navy-900 to-navy-950 border-2 border-gold-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden print-card">
+        <!-- Luxury Accent Background Line -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gold-500/5 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="border-b border-gold-500/30 pb-4 mb-5 text-center">
+          <p class="text-xs uppercase tracking-widest text-gold-400 font-semibold mb-1">Resumo de Precificação</p>
+          <h3 id="summaryPieceTitle" class="font-serif text-xl text-white font-bold">Anel Dedinho Cachorro</h3>
+          <span id="summaryWorkshopBadge" class="text-xs text-slate-400">Ateliê Paloma</span>
+        </div>
+
+        <!-- Detailed Breakdown -->
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between items-center p-3 rounded-xl bg-navy-950/80 border border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-gem"></i>
+              </div>
+              <span class="text-sm text-slate-300">Total das Pedras</span>
+            </div>
+            <span id="resStonesTotal" class="font-semibold text-sm text-white">R$ 0,00</span>
+          </div>
+
+          <div class="flex justify-between items-center p-3 rounded-xl bg-navy-950/80 border border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <span class="text-sm text-slate-300">Total do Metal (Ouro)</span>
+            </div>
+            <span id="resMetalTotal" class="font-semibold text-sm text-white">R$ 0,00</span>
+          </div>
+
+          <div class="flex justify-between items-center p-3 rounded-xl bg-navy-950/80 border border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-hammer"></i>
+              </div>
+              <span class="text-sm text-slate-300">Mão de Obra (MO)</span>
+            </div>
+            <span id="resLaborTotal" class="font-semibold text-sm text-white">R$ 0,00</span>
+          </div>
+        </div>
+
+        <!-- Totals Divider -->
+        <div class="border-t border-dashed border-gold-500/30 pt-4 space-y-3">
+          <div class="flex justify-between items-center text-slate-300">
+            <span class="text-sm font-medium">Custo Total da Peça</span>
+            <span id="resCostTotal" class="text-base font-bold text-slate-200">R$ 0,00</span>
+          </div>
+
+          <div class="p-4 rounded-xl bg-gradient-to-r from-gold-600/20 via-gold-500/10 to-gold-600/20 border border-gold-500/40 text-center space-y-1 shadow-lg">
+            <span class="text-xs uppercase tracking-widest text-gold-400 font-semibold">Preço de Venda Sugerido</span>
+            <div id="resSellingPrice" class="font-serif text-3xl font-extrabold text-gold-300">R$ 0,00</div>
+            <p class="text-[11px] text-slate-400">Markup aplicado: <span id="resAppliedMarkup" class="text-gold-400 font-semibold">3.5x</span></p>
+            <p class="text-xs text-slate-400">Antes do arredondamento: <span id="rawSellingPrice"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Pieces History Sheet -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl space-y-4 no-print">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="font-serif text-base font-semibold text-gold-400 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-sm"></i> Histórico de Peças
+          </h2>
+          <button onclick="clearHistory()" class="text-xs text-rose-400 hover:text-rose-300 transition-colors">
+            Limpar Tudo
+          </button>
+        </div>
+
+        <div id="historyList" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+          <p class="text-xs text-slate-500 text-center py-4">Nenhuma peça salva ainda.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Printable Specification Sheet (Visible ONLY during print) -->
+  <div id="printSheet" class="print-only max-w-4xl mx-auto p-8 bg-white text-black space-y-6">
+    <div class="border-b-2 border-black pb-4 flex justify-between items-end">
+      <div>
+        <h1 class="text-2xl font-serif font-bold text-black uppercase tracking-wider">Ficha de Precificação de Joia</h1>
+        <p class="text-sm text-gray-600">Relatório Interno de Custo e Venda</p>
+      </div>
+      <div class="text-right text-xs text-gray-500">
+        <p>Data: <span id="printDate"></span></p>
+        <p>Moeda: BRL / USD</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-sm border-b pb-4">
+      <div>
+        <p class="font-semibold text-gray-700">Peça:</p>
+        <p id="printPieceName" class="text-base font-bold text-black">-</p>
+      </div>
+      <div>
+        <p class="font-semibold text-gray-700">Ateliê Responsável:</p>
+        <p id="printWorkshop" class="text-base font-bold text-black">-</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <h3 class="font-bold text-base border-b pb-1">1. Composição de Gemas</h3>
+      <table class="w-full text-xs text-left border-collapse">
+        <thead>
+          <tr class="border-b bg-gray-100">
+            <th class="p-2">Gema / Medida</th>
+            <th class="p-2">Qtd</th>
+            <th class="p-2">CT Totais</th>
+            <th class="p-2">Preço (US$)</th>
+            <th class="p-2 text-right">Subtotal (R$)</th>
+          </tr>
+        </thead>
+        <tbody id="printStonesBody"></tbody>
+      </table>
+    </div>
+
+    <div class="space-y-4">
+      <h3 class="font-bold text-base border-b pb-1">2. Metal & Mão de Obra</h3>
+      <div class="grid grid-cols-2 gap-4 text-xs">
+        <div class="border p-3 rounded">
+          <p class="font-semibold text-gray-700 mb-1">Cálculo do Ouro</p>
+          <p id="printMetalDetails" class="text-gray-800"></p>
+        </div>
+        <div class="border p-3 rounded">
+          <p class="font-semibold text-gray-700 mb-1">Mão de Obra (MO)</p>
+          <p id="printLaborDetails" class="text-gray-800"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t-2 border-black pt-4 space-y-2 text-right">
+      <p class="text-sm">Custo Total de Produção: <strong id="printCostTotal" class="text-base">R$ 0,00</strong></p>
+      <p class="text-xl font-bold">Preço Final de Venda: <span id="printSellingPrice" class="text-2xl text-black">R$ 0,00</span></p>
+      <p class="text-xs text-gray-500">Antes do arredondamento: <span id="printRawSellingPrice"></span></p>
+      <p class="text-xs text-gray-500">Com markup aplicado de <span id="printMarkup">3.5</span>x</p>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // Preset Diamond Rates per MM / Points (USD per Ct)
+    const DIAMOND_PRESETS = [
+      { label: "1.00mm (0.005ct)", mm: 1.00, ctUnit: 0.005, usdCt: 250 },
+      { label: "1.50mm (0.015ct)", mm: 1.50, ctUnit: 0.015, usdCt: 260 },
+      { label: "1.70mm (0.020ct)", mm: 1.70, ctUnit: 0.020, usdCt: 280 },
+      { label: "3.00mm (0.100ct)", mm: 3.00, ctUnit: 0.100, usdCt: 400 },
+      { label: "3.55mm (0.150ct)", mm: 3.55, ctUnit: 0.150, usdCt: 565 },
+      { label: "4.10mm (0.250ct)", mm: 4.10, ctUnit: 0.250, usdCt: 750 },
+      { label: "4.65mm (0.350ct)", mm: 4.65, ctUnit: 0.350, usdCt: 750 },
+      { label: "5.20mm (0.500ct)", mm: 5.20, ctUnit: 0.500, usdCt: 800 },
+      { label: "5.75mm (0.700ct)", mm: 5.75, ctUnit: 0.700, usdCt: 1430 },
+      { label: "6.25mm (1.000ct)", mm: 6.25, ctUnit: 1.000, usdCt: 1650 },
+      { label: "Pedra Direta em R$ (Ex: Esmeralda)", mm: 0, ctUnit: 0, usdCt: 0, directBrl: true }
+    ];
+
+    const extraWorkshops = readStore('jewelWorkshops', []);
+    const extraMeasures = readStore('jewelMeasures', []);
+    DIAMOND_PRESETS.push(...extraMeasures);
+    const measureEdits = readStore('jewelMeasureEdits', {});
+    for (const [index, measure] of Object.entries(measureEdits)) {
+      if (DIAMOND_PRESETS[index] && !DIAMOND_PRESETS[index].directBrl) DIAMOND_PRESETS[index] = measure;
+    }
+
+    function refreshWorkshops() {
+      const select = document.getElementById('workshopSelect');
+      select.querySelectorAll('[data-custom]').forEach(option => option.remove());
+      for (const workshop of extraWorkshops) {
+        const option = new Option('Ateliê ' + workshop.name, workshop.name);
+        option.dataset.custom = 'true';
+        select.add(option);
+      }
+    }
+
+    function bindRegistries() {
+      const workshopForm = document.getElementById('workshopForm');
+      workshopForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const data = new FormData(workshopForm);
+        const name = data.get('title').trim();
+        const select = document.getElementById('workshopSelect');
+        if (!name || [...select.options].some(option => option.value.toLowerCase() === name.toLowerCase())) {
+          notify('Informe um nome de ateliê novo.');
+          return;
+        }
+        const method = data.get('method');
+        const workshop = {name, method, factor: method === 'weight' ? 0.95 : 75, fixedFormula: true};
+        if (!writeStore('jewelWorkshops', [...extraWorkshops, workshop])) return;
+        extraWorkshops.push(workshop);
+        refreshWorkshops();
+        select.value = name;
+        calculateAll();
+        workshopForm.reset();
+        notify('Ateliê cadastrado e selecionado.');
+      });
+      bindMeasureRegistry();
+    }
+
+    function bindMeasureRegistry() {
+      const form = document.getElementById('measureForm');
+      const picker = form.elements.existing;
+      const submit = document.getElementById('measureSubmit');
+      const decimal = value => Number(value.trim().replace(',', '.'));
+      const display = value => value.toLocaleString('pt-BR', {maximumFractionDigits: 10, useGrouping: false});
+      function refreshPicker(selected = '') {
+        picker.replaceChildren(new Option('Nova medida', ''));
+        DIAMOND_PRESETS.forEach((measure, index) => {
+          if (!measure.directBrl) picker.add(new Option(measure.label, String(index)));
+        });
+        picker.value = selected;
+      }
+      function fillMeasure() {
+        const measure = picker.value === '' ? null : DIAMOND_PRESETS[Number(picker.value)];
+        form.elements.points.value = measure ? display(measure.points ?? measure.ctUnit * 100) : '';
+        form.elements.ct.value = measure ? display(measure.ctUnit) : '';
+        form.elements.mm.value = measure ? display(measure.mm) : '';
+        form.elements.price.value = measure ? display(measure.usdCt) : '';
+        submit.textContent = measure ? 'Salvar alterações da medida' : 'Cadastrar medida';
+      }
+      refreshPicker();
+      picker.addEventListener('change', fillMeasure);
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const [points, ctUnit, mm, usdCt] = ['points','ct','mm','price'].map(key => decimal(data.get(key)));
+        if (![points, ctUnit, mm, usdCt].every(Number.isFinite) || points <= 0 || ctUnit <= 0 || mm <= 0 || usdCt < 0 || !data.get('price').trim()) {
+          notify('Informe ponto, peso em ct e medida maiores que zero, e um valor em dólar válido.');
+          return;
+        }
+        const editing = picker.value !== '';
+        const index = editing ? Number(picker.value) : DIAMOND_PRESETS.length;
+        const label = display(mm) + ' mm • ' + display(points) + ' pt • ' + display(ctUnit) + ' ct';
+        const measure = {label, points, ctUnit, mm, usdCt};
+        if (editing) {
+          const previous = DIAMOND_PRESETS[index];
+          if (!writeStore('jewelMeasureEdits', {...measureEdits, [index]: measure})) return;
+          measureEdits[index] = measure;
+          DIAMOND_PRESETS[index] = measure;
+          for (const stone of stonesState) {
+            if (stone.type !== 'preset' || stone.presetIndex !== index) continue;
+            const previousTotal = Number((stone.qty * previous.ctUnit).toFixed(8));
+            if (stone.customCt === previousTotal) stone.customCt = Number((stone.qty * ctUnit).toFixed(8));
+            if (stone.customUsdCt === previous.usdCt) stone.customUsdCt = usdCt;
+          }
+        } else {
+          if (!writeStore('jewelMeasures', [...extraMeasures, measure])) return;
+          extraMeasures.push(measure);
+          DIAMOND_PRESETS.push(measure);
+        }
+        renderStones();
+        calculateAll();
+        refreshPicker(String(index));
+        fillMeasure();
+        notify(editing ? 'Alterações da medida salvas.' : 'Medida cadastrada e disponível em Gemas e Diamantes.');
+      });
+    }
+
+    // State for Stones & Labor Rows
+    let stonesState = [
+      { id: 1, type: "preset", presetIndex: 0, qty: 41, customCt: 0.205, customUsdCt: 250, directBrlVal: 0, name: "Bri 1.00mm" },
+      { id: 2, type: "direct", presetIndex: 10, qty: 1, customCt: 0.04, customUsdCt: 0, directBrlVal: 39.60, name: "Esmeraldas" }
+    ];
+
+    let laborState = [
+      { id: 1, name: "Modelagem 3D", cost: 480.00 },
+      { id: 2, name: "Prototipagem", cost: 107.62 },
+      { id: 3, name: "Mão de Obra Produção", cost: 1000.00 },
+      { id: 4, name: "Cravação Manual (43 pedras)", cost: 258.00 }
+    ];
+
+    // Initialize App
+    window.onload = function() {
+      renderStones();
+      renderLabor();
+      loadHistory();
+      calculateAll();
+    };
+
+    // Render Stones Inputs
+    function renderStones() {
+      const container = document.getElementById("stonesContainer");
+      container.innerHTML = "";
+
+      stonesState.forEach((stone, index) => {
+        const row = document.createElement("div");
+        row.className = "p-3.5 bg-navy-950/80 rounded-xl border border-slate-800 space-y-3";
+
+        let presetOptions = DIAMOND_PRESETS.map((p, pIdx) => `
+          <option value="${pIdx}" ${stone.presetIndex === pIdx ? 'selected' : ''}>${escapeHtml(p.label)}</option>
+        `).join("");
+
+        const isDirect = stone.type === "direct" || (DIAMOND_PRESETS[stone.presetIndex] && DIAMOND_PRESETS[stone.presetIndex].directBrl);
+
+        row.innerHTML = `
+          <div class="flex items-center justify-between">
+            <input type="text" value="${escapeHtml(stone.name)}" onchange="updateStone(${index}, 'name', this.value)" placeholder="Nome / Descrição" class="bg-transparent border-b border-slate-700 text-xs text-gold-300 font-semibold focus:border-gold-500 focus:outline-none px-1 py-0.5 w-1/2">
+            <button aria-label="Remover pedra" onclick="removeStone(${index})" class="text-xs text-rose-400 hover:text-rose-300 px-2 py-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">Medida / Tipo</label>
+              <select onchange="onStonePresetChange(${index}, this.value)" class="w-full bg-navy-900 border border-slate-700 rounded px-2 py-1.5 text-white">
+                ${presetOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 mb-1">Quantidade</label>
+              <input type="number" value="${stone.qty}" oninput="updateStone(${index}, 'qty', parseFloat(this.value)||0)" class="w-full bg-navy-900 border border-slate-700 rounded px-2 py-1.5 text-white">
+            </div>
+
+            ${isDirect ? `
+              <div class="sm:col-span-2">
+                <label class="block text-slate-400 mb-1">Valor Total Direto em R$</label>
+                <input type="number" step="0.01" value="${stone.directBrlVal}" oninput="updateStone(${index}, 'directBrlVal', parseFloat(this.value)||0)" class="w-full bg-navy-900 border border-slate-700 rounded px-2 py-1.5 text-gold-300 font-semibold">
+              </div>
+            ` : `
+              <div>
+                <label class="block text-slate-400 mb-1">Quilates Totais (ct)</label>
+                <input type="number" step="any" value="${stone.customCt}" oninput="updateStone(${index}, 'customCt', parseFloat(this.value)||0)" class="w-full bg-navy-900 border border-slate-700 rounded px-2 py-1.5 text-white">
+              </div>
+
+              <div>
+                <label class="block text-slate-400 mb-1">Preço/ct (US$)</label>
+                <input type="number" step="any" value="${stone.customUsdCt}" oninput="updateStone(${index}, 'customUsdCt', parseFloat(this.value)||0)" class="w-full bg-navy-900 border border-slate-700 rounded px-2 py-1.5 text-gold-300 font-semibold">
+              </div>
+            `}
+          </div>
+        `;
+
+        container.appendChild(row);
+      });
+    }
+
+    // Render Labor Services Inputs
+    function renderLabor() {
+      const container = document.getElementById("laborContainer");
+      container.innerHTML = "";
+
+      laborState.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "flex items-center gap-3 bg-navy-950/80 p-2.5 rounded-xl border border-slate-800 text-xs";
+
+        row.innerHTML = `
+          <input type="text" value="${escapeHtml(item.name)}" onchange="updateLabor(${index}, 'name', this.value)" placeholder="Serviço / MO" class="flex-1 bg-navy-900 border border-slate-700 rounded px-2.5 py-1.5 text-white">
+          <div class="relative w-32">
+            <span class="absolute left-2 top-1.5 text-slate-500">R$</span>
+            <input type="number" step="0.01" value="${item.cost}" oninput="updateLabor(${index}, 'cost', parseFloat(this.value)||0)" class="w-full bg-navy-900 border border-slate-700 rounded pl-7 pr-2 py-1.5 text-gold-300 font-semibold text-right">
+          </div>
+          <button aria-label="Remover serviço" onclick="removeLabor(${index})" class="text-rose-400 hover:text-rose-300 p-1.5">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+
+        container.appendChild(row);
+      });
+    }
+
+    // Stone Handler Callbacks
+    function addStoneRow() {
+      stonesState.push({
+        id: Date.now(),
+        type: "preset",
+        presetIndex: 0,
+        qty: 10,
+        customCt: 0.05,
+        customUsdCt: 250,
+        directBrlVal: 0,
+        name: "Nova Pedra"
+      });
+      renderStones();
+      calculateAll();
+    }
+
+    function removeStone(index) {
+      stonesState.splice(index, 1);
+      renderStones();
+      calculateAll();
+    }
+
+    function onStonePresetChange(index, presetIdx) {
+      presetIdx = parseInt(presetIdx);
+      const preset = DIAMOND_PRESETS[presetIdx];
+      stonesState[index].presetIndex = presetIdx;
+
+      if (preset.directBrl) {
+        stonesState[index].type = "direct";
+      } else {
+        stonesState[index].type = "preset";
+        stonesState[index].customUsdCt = preset.usdCt;
+        stonesState[index].customCt = parseFloat((stonesState[index].qty * preset.ctUnit).toFixed(8));
+      }
+      renderStones();
+      calculateAll();
+    }
+
+    function updateStone(index, key, val) {
+      stonesState[index][key] = typeof val === "number" ? Math.max(0, val) : val;
+      if (key === 'qty' && stonesState[index].type === 'preset') {
+        const preset = DIAMOND_PRESETS[stonesState[index].presetIndex];
+        if (preset && !preset.directBrl) {
+          stonesState[index].customCt = parseFloat((val * preset.ctUnit).toFixed(8));
+          const ctInput = document.querySelectorAll("#stonesContainer > div")[index].querySelectorAll("input[type=number]")[1];
+          if(ctInput) ctInput.value = stonesState[index].customCt;
+        }
+      }
+      calculateAll();
+    }
+
+    // Labor Handler Callbacks
+    function addLaborRow() {
+      laborState.push({ id: Date.now(), name: "Novo Serviço", cost: 0.00 });
+      renderLabor();
+      calculateAll();
+    }
+
+    function removeLabor(index) {
+      laborState.splice(index, 1);
+      renderLabor();
+      calculateAll();
+    }
+
+    function updateLabor(index, key, val) {
+      laborState[index][key] = typeof val === "number" ? Math.max(0, val) : val;
+      calculateAll();
+    }
+
+    // Core Calculation Logic
+    function calculateAll() {
+      // 1. Global Parameters
+      const usdRate = readNumber("globalUsdRate");
+      const goldPrice = readNumber("globalGoldPrice");
+      const markup = readNumber("globalMarkup");
+
+      const workshop = document.getElementById("workshopSelect").value;
+      const pieceName = document.getElementById("pieceName").value || "Sem Título";
+
+      // Update Workshop UI Badges & Formula Description
+      const badge = document.getElementById("workshopFormulaBadge");
+      const desc = document.getElementById("workshopFormulaDesc");
+      const falhaContainer = document.getElementById("falhaContainer");
+
+      let metalCost = 0;
+      const metalWeight = parseFloat(document.getElementById("metalWeight").value) || 0;
+      const metalLoss = parseFloat(document.getElementById("metalLoss").value) || 0;
+
+      const registered = extraWorkshops.find(item => item.name === workshop);
+      const weightMethod = workshop === 'Serginho' || registered?.method === 'weight';
+      const factor = registered?.factor ?? (weightMethod ? 0.95 : 75);
+      const effectiveWeight = weightMethod ? metalWeight * factor : metalWeight + metalLoss;
+      const calculatedRate = weightMethod ? goldPrice : goldPrice * factor / 100;
+      const appliedRate = (workshop === 'Serginho' || (weightMethod && registered?.fixedFormula)) ? calculatedRate : nextMultiple(calculatedRate, 50);
+      const metalFormula = weightMethod
+        ? (appliedRate !== calculatedRate ? formatBRL(calculatedRate) + '/g → ' : '') + formatBRL(appliedRate) + '/g × (' + metalWeight + ' g × ' + factor + ')'
+        : formatBRL(goldPrice) + '/g × ' + factor + '% = ' + formatBRL(calculatedRate) + '/g → ' +
+          formatBRL(appliedRate) + '/g × (' + metalWeight + ' g + ' + metalLoss + ' g de perda)';
+      badge.textContent = weightMethod ? 'Fator no peso: ' + factor : 'Percentual da cotação: ' + factor + '%';
+      desc.textContent = metalFormula;
+      falhaContainer.style.display = weightMethod ? 'none' : 'block';
+      metalCost = effectiveWeight * appliedRate;
+
+      // 2. Stones Calculation
+      let stonesTotalBrl = 0;
+      stonesState.forEach(s => {
+        if (s.type === "direct" || (DIAMOND_PRESETS[s.presetIndex] && DIAMOND_PRESETS[s.presetIndex].directBrl)) {
+          stonesTotalBrl += (s.directBrlVal || 0);
+        } else {
+          // Formula: CT * USD/CT * USD_RATE
+          const itemBrl = (s.customCt || 0) * (s.customUsdCt || 0) * usdRate;
+          stonesTotalBrl += itemBrl;
+        }
+      });
+
+      // 3. Labor Calculation
+      let laborTotalBrl = 0;
+      laborState.forEach(l => {
+        laborTotalBrl += (l.cost || 0);
+      });
+
+      // 4. Final Totals
+      const totalCost = stonesTotalBrl + metalCost + laborTotalBrl;
+      const rawSellingPrice = totalCost * markup;
+      const sellingPrice = roundSellingPrice(rawSellingPrice);
+      document.getElementById('rawSellingPrice').textContent = formatBRL(rawSellingPrice);
+
+      // Update Result Cards
+      document.getElementById("summaryPieceTitle").innerText = pieceName;
+      document.getElementById("summaryWorkshopBadge").innerText = `Ateliê ${workshop}`;
+
+      document.getElementById("resStonesTotal").innerText = formatBRL(stonesTotalBrl);
+      document.getElementById("resMetalTotal").innerText = formatBRL(metalCost);
+      document.getElementById("resLaborTotal").innerText = formatBRL(laborTotalBrl);
+      document.getElementById("resCostTotal").innerText = formatBRL(totalCost);
+      document.getElementById("resSellingPrice").innerText = formatBRL(sellingPrice);
+      document.getElementById("resAppliedMarkup").innerText = `${markup.toFixed(2)}x`;
+
+      // Update Printable Sheet
+      document.getElementById("printDate").innerText = new Date().toLocaleDateString('pt-BR', {timeZone:"America/Sao_Paulo"});
+      document.getElementById("printPieceName").innerText = pieceName;
+      document.getElementById("printWorkshop").innerText = `Ateliê ${workshop}`;
+      document.getElementById("printCostTotal").innerText = formatBRL(totalCost);
+      document.getElementById("printSellingPrice").innerText = formatBRL(sellingPrice);
+      document.getElementById("printMarkup").innerText = markup.toFixed(2);
+
+      document.getElementById('printMetalDetails').textContent = metalFormula + ' — Total: ' + formatBRL(metalCost);
+      document.getElementById('printRawSellingPrice').textContent = formatBRL(rawSellingPrice);
+
+      // Printable Labor Details
+      document.getElementById("printLaborDetails").innerHTML = laborState.map(l => `${escapeHtml(l.name)}: ${formatBRL(l.cost)}`).join("<br>") + `<br><strong>Total MO: ${formatBRL(laborTotalBrl)}</strong>`;
+
+      // Printable Stones Table
+      const printTbody = document.getElementById("printStonesBody");
+      printTbody.innerHTML = stonesState.map(s => {
+        const isDirect = s.type === "direct" || (DIAMOND_PRESETS[s.presetIndex] && DIAMOND_PRESETS[s.presetIndex].directBrl);
+        const subtotal = isDirect ? s.directBrlVal : (s.customCt * s.customUsdCt * usdRate);
+        return `
+          <tr class="border-b">
+            <td class="p-2">${escapeHtml(s.name)}</td>
+            <td class="p-2">${s.qty}</td>
+            <td class="p-2">${isDirect ? '-' : s.customCt + ' ct'}</td>
+            <td class="p-2">${isDirect ? '-' : 'US$ ' + s.customUsdCt}</td>
+            <td class="p-2 text-right font-semibold">${formatBRL(subtotal)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function nextMultiple(value, step) {
+      if (value <= 0) return 0;
+      const cents = Math.round(value * 100);
+      return (Math.floor(cents / (step * 100)) + 1) * step;
+    }
+
+    function roundSellingPrice(value) {
+      if (value >= 29000 && value <= 30000) return 30100;
+      return nextMultiple(value, 100);
+    }
+
+    // Helper: Currency Formatter
+    function formatBRL(val) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+    }
+
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function readNumber(id){return Math.max(0,Number(document.getElementById(id).value)||0)}
+    const fields=['globalUsdRate','globalGoldPrice','globalMarkup','pieceName','workshopSelect','metalWeight','metalLoss'];
+    function notify(message){document.getElementById('notice').textContent=message}
+    function readStore(key,fallback){try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}}
+    function writeStore(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){notify('Não foi possível salvar neste navegador. Exporte o histórico antes de fechar.');return false}}
+    function snapshot(){return {fields:Object.fromEntries(fields.map(id=>[id,document.getElementById(id).value])),stones:structuredClone(stonesState),labor:structuredClone(laborState)}}
+    function restore(data){if(!data||!data.fields||!Array.isArray(data.stones)||!Array.isArray(data.labor))return;fields.forEach(id=>{if(data.fields[id]!==undefined)document.getElementById(id).value=data.fields[id]});stonesState=data.stones;laborState=data.labor;renderStones();renderLabor();calculateAll()}
+    function saveCurrentPiece(){calculateAll();const data=snapshot();const history=readStore('jewelHistory',[]);history.unshift({id:Date.now(),date:new Date().toLocaleDateString('pt-BR'),name:data.fields.pieceName||'Sem título',workshop:data.fields.workshopSelect,cost:document.getElementById('resCostTotal').innerText,price:document.getElementById('resSellingPrice').innerText,data});if(writeStore('jewelHistory',history)){loadHistory();notify('Peça salva. Use Reabrir para continuar editando.')}}
+    function loadHistory(){const history=readStore('jewelHistory',[]);const container=document.getElementById('historyList');container.innerHTML='';if(!history.length){container.textContent='Nenhuma peça salva ainda.';return}history.forEach((item,index)=>{const row=document.createElement('div');row.className='p-3 bg-navy-950 border border-slate-800 rounded-xl text-xs space-y-2';const title=document.createElement('strong');title.textContent=item.name;row.append(title);const detail=document.createElement('p');detail.textContent='Ateliê '+item.workshop+' • '+item.date+' • Venda: '+item.price+' • Custo: '+item.cost;row.append(detail);if(item.data){const open=document.createElement('button');open.textContent='Reabrir peça';open.className='text-gold-300 mr-4';open.onclick=()=>{restore(item.data);notify('Peça reaberta para edição.')};row.append(open)}const del=document.createElement('button');del.textContent='Excluir';del.className='text-rose-400';del.onclick=()=>{if(!confirm('Excluir esta peça do histórico?'))return;history.splice(index,1);if(writeStore('jewelHistory',history))loadHistory()};row.append(del);container.append(row)})}
+    function clearHistory(){if(confirm('Excluir todas as peças salvas?')){if(writeStore('jewelHistory',[]))loadHistory()}}
+    function newPiece(){if(!confirm('Iniciar uma nova peça? Salve a atual no histórico para preservá-la.'))return;document.getElementById('pieceName').value='Nova peça';document.getElementById('metalWeight').value=0;document.getElementById('metalLoss').value=0;stonesState=[];laborState=[];renderStones();renderLabor();calculateAll();notify('Nova peça pronta para preencher.')}
+    function exportHistory(){const history=readStore('jewelHistory',[]);if(!history.length){notify('Salve uma peça antes de exportar.');return}const cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';const csv='\ufeff'+[['Data','Peça','Ateliê','Custo','Venda'],...history.map(x=>[x.date,x.name,x.workshop,x.cost,x.price])].map(row=>row.map(cell).join(';')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='historico_joias.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+    const originalCalculate=calculateAll;
+    calculateAll=function(){document.querySelectorAll('input[type=number]').forEach(el=>{el.min='0';if(Number(el.value)<0)el.value=0});originalCalculate();writeStore('jewelDraft',snapshot())};
+    window.onload=function(){refreshWorkshops();bindRegistries();const draft=readStore('jewelDraft',null);renderStones();renderLabor();loadHistory();if(draft)restore(draft);else calculateAll();document.querySelectorAll('input[id],select[id]').forEach(el=>el.addEventListener('input',calculateAll));document.querySelectorAll('label').forEach(label=>{const input=label.parentElement.querySelector('input,select');if(input&&input.id)label.htmlFor=input.id});document.querySelectorAll('button').forEach(b=>{if(!b.textContent.trim())b.setAttribute('aria-label','Remover item')})};
+  </script>
+</body>
+</html>
