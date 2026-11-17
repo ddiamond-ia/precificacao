@@ -108,10 +108,37 @@
       #printSheet th:last-child, #printSheet td:last-child { text-align: right; }
       #printSheet tr { break-inside: avoid; }
     }
+    [hidden] { display: none !important; }
+    .dd-layout { display: grid; grid-template-columns: 215px minmax(0,1fr); width: 100%; max-width: 1500px; margin: 0 auto; }
+    .dd-sidebar { padding: 24px 14px; border-right: 1px solid #263147; }
+    .dd-sidebar nav { display: grid; gap: 6px; }
+    .dd-sidebar button { text-align: left; width: 100%; border-radius: 8px; padding: 10px 12px; }
+    .dd-sidebar button[aria-current] { background: #29251b; color: #f4d77e; }
+    .dd-panel { margin: 16px; max-width: 920px; }
+    .dd-input { width: 100%; padding: 8px 10px; background: #03060f; color: white; border: 1px solid #475569; border-radius: 6px; }
+    .dd-access { width: min(420px, calc(100% - 32px)); margin: 10vh auto; padding: 24px; background: #0b132b; border: 1px solid #826b39; border-radius: 16px; }
+    .dd-access form, .dd-access label { display: grid; gap: 8px; }
+    .dd-access form { margin-top: 16px; }
+    @media (max-width: 760px) {
+      .dd-layout { grid-template-columns: minmax(0,1fr); }
+      .dd-sidebar { border-right: 0; border-bottom: 1px solid #263147; padding: 8px 12px; }
+      .dd-sidebar nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
   </style>
 </head>
 <body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
 
+  <section id="ddAccess" class="dd-access no-print">
+    <h1 class="text-xl font-semibold text-gold-300">Precificação DD</h1>
+    <p id="accessIntro" class="text-sm text-slate-300 mt-2"></p>
+    <form id="accessForm">
+      <label>Usuário <input class="dd-input" name="username" autocomplete="username" maxlength="80" required></label>
+      <label>Senha <input class="dd-input" name="password" type="password" minlength="8" required></label>
+      <button id="accessSubmit" class="registry-action">Entrar</button>
+      <p id="accessStatus" role="status" class="text-sm text-gold-300"></p>
+    </form>
+  </section>
+  <div id="ddShell" class="no-print" hidden>
   <!-- Header -->
   <header class="bg-navy-900 border-b border-gold-500/30 sticky top-0 z-30 backdrop-blur-md bg-opacity-90 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -125,7 +152,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div id="pricingActions" class="flex items-center gap-3">
         <button onclick="saveCurrentPiece()" class="px-3 py-2 bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-400 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2">
           <i class="fa-solid fa-bookmark"></i>
           <span class="hidden sm:inline">Salvar no Histórico</span>
@@ -138,11 +165,20 @@
     </div>
   </header>
 
-  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 no-print"><div class="flex flex-wrap gap-3 items-center"><button onclick="newPiece()" class="px-4 py-2 rounded-lg border border-gold-500/40 text-gold-300 text-sm">+ Nova peça</button><button onclick="exportHistory()" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm">Exportar histórico CSV</button><span class="text-xs text-slate-400">Cadastros, rascunho e histórico salvos neste navegador.</span></div><p id="notice" role="status" aria-live="polite" class="text-sm text-gold-300 mt-3"></p></div>
-  <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-3 no-print">
-    <div class="grid gap-4 md:grid-cols-2">
-      <details open class="rounded-xl border border-gold-500/30 bg-navy-900 p-4">
-        <summary class="cursor-pointer text-gold-300 font-semibold">Cadastro de ateliês</summary>
+  <div class="dd-layout">
+    <aside class="dd-sidebar">
+      <nav aria-label="Menu principal">
+        <button data-view="pricing" aria-current="page">Precificação</button>
+        <button data-view="workshops">Cadastro de ateliês</button>
+        <button data-view="measures">Cadastro de medidas</button>
+        <button data-view="saved">Fichas salvas</button>
+      </nav>
+      <button id="accessLogout" class="mt-4 text-slate-300">Sair</button>
+    </aside>
+    <div>
+      <p id="notice" role="status" aria-live="polite" class="mx-4 mt-3 text-sm text-gold-300"></p>
+      <section id="workshops" class="dd-panel rounded-xl border border-gold-500/30 bg-navy-900 p-4" hidden>
+        <h2 class="font-semibold text-gold-300">Cadastro de ateliês</h2>
         <form id="workshopForm" class="grid gap-2 mt-3">
           <label>Nome do ateliê <input name="title" required maxlength="80"></label>
           <label>Fórmula aplicada <select name="method">
@@ -151,11 +187,15 @@
           </select></label>
           <button class="registry-action">Cadastrar ateliê</button>
         </form>
-      </details>
-      <details open class="rounded-xl border border-gold-500/30 bg-navy-900 p-4">
-        <summary class="cursor-pointer text-gold-300 font-semibold">Cadastro de medidas</summary>
+      </section>
+      <section id="measures" class="dd-panel rounded-xl border border-gold-500/30 bg-navy-900 p-4" hidden>
+        <h2 class="font-semibold text-gold-300">Cadastro de medidas</h2>
         <form id="measureForm" class="grid gap-2 mt-3">
-          <label>Medida para editar <select name="existing" id="measureExisting"></select></label>
+          <div class="flex flex-wrap gap-2 items-end">
+            <label class="flex-1">Medida cadastrada <select name="existing" id="measureExisting"></select></label>
+            <button type="button" id="measureEdit" class="registry-action">Editar medida</button>
+            <button type="button" id="measureNew" class="registry-action">Nova medida</button>
+          </div>
           <div class="grid grid-cols-2 gap-2">
             <label>Ponto <input name="points" inputmode="decimal" placeholder="Ex.: 1,5" required></label>
             <label>Peso por pedra (ct) <input name="ct" inputmode="decimal" placeholder="Ex.: 0,015" required></label>
@@ -164,10 +204,9 @@
           </div>
           <button class="registry-action" id="measureSubmit">Cadastrar medida</button>
         </form>
-      </details>
-    </div>
-  </section>
-  <!-- Main Content -->
+      </section>
+      <section id="pricing">
+        <div class="mx-4 mt-3"><button onclick="newPiece()" class="registry-action">+ Nova peça</button></div>
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
     <!-- Left Column: Parameters & Form Inputs (7 Cols) -->
@@ -224,7 +263,8 @@
           <div>
             <label class="block text-xs text-slate-300 mb-1">Selecione o Ateliê (Regra do Metal)</label>
             <select id="workshopSelect" onchange="calculateAll()" class="w-full bg-navy-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-gold-400 font-semibold focus:border-gold-500 focus:outline-none">
-              <option value="Paloma">Ateliê Paloma (Regra 75%)</option>
+              <option value="">Selecione o ateliê</option>
+              <option value="Paloma" selected>Ateliê Paloma (Regra 75%)</option>
               <option value="GUM">Ateliê GUM (Regra 75%)</option>
               <option value="Altamir">Ateliê Altamir (Regra 75%)</option>
               <option value="Serginho">Ateliê Serginho (Fator 0.95 no Peso)</option>
@@ -356,25 +396,21 @@
         </div>
       </div>
 
-      <!-- Saved Pieces History Sheet -->
-      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-5 shadow-xl space-y-4 no-print">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h2 class="font-serif text-base font-semibold text-gold-400 flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-sm"></i> Histórico de Peças
-          </h2>
-          <button onclick="clearHistory()" class="text-xs text-rose-400 hover:text-rose-300 transition-colors">
-            Limpar Tudo
-          </button>
-        </div>
-
-        <div id="historyList" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-          <p class="text-xs text-slate-500 text-center py-4">Nenhuma peça salva ainda.</p>
-        </div>
-      </div>
-
     </div>
-
   </main>
+  </section>
+  <section id="saved" class="dd-panel rounded-xl border border-gold-500/30 bg-navy-900 p-4 space-y-4" hidden>
+    <h2 class="font-semibold text-gold-300">Fichas salvas</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <label>Filtrar por ateliê <select id="historyWorkshop" class="dd-input"></select></label>
+      <button onclick="exportHistory()" class="registry-action">Exportar histórico CSV</button>
+      <button onclick="clearHistory()" class="text-rose-400 px-2 py-2">Limpar tudo</button>
+    </div>
+    <div id="historyList" class="space-y-2"></div>
+  </section>
+    </div>
+  </div>
+  </div>
 
   <!-- Printable Specification Sheet (Visible ONLY during print) -->
   <article id="printSheet" class="print-only" lang="pt-BR">
@@ -493,6 +529,7 @@
       const form = document.getElementById('measureForm');
       const picker = form.elements.existing;
       const submit = document.getElementById('measureSubmit');
+      let editIndex = null;
       const decimal = value => Number(value.trim().replace(',', '.'));
       const display = value => value.toLocaleString('pt-BR', {maximumFractionDigits: 10, useGrouping: false});
       function refreshPicker(selected = '') {
@@ -503,7 +540,7 @@
         picker.value = selected;
       }
       function fillMeasure() {
-        const measure = picker.value === '' ? null : DIAMOND_PRESETS[Number(picker.value)];
+        const measure = editIndex === null ? null : DIAMOND_PRESETS[editIndex];
         form.elements.points.value = measure ? display(measure.points ?? measure.ctUnit * 100) : '';
         form.elements.ct.value = measure ? display(measure.ctUnit) : '';
         form.elements.mm.value = measure ? display(measure.mm) : '';
@@ -511,7 +548,19 @@
         submit.textContent = measure ? 'Salvar alterações da medida' : 'Cadastrar medida';
       }
       refreshPicker();
-      picker.addEventListener('change', fillMeasure);
+      document.getElementById('measureEdit').onclick = () => {
+        if (picker.value === '') { notify('Selecione a medida que deseja editar.'); return; }
+        editIndex = Number(picker.value);
+        fillMeasure();
+        notify('Editando ' + DIAMOND_PRESETS[editIndex].label);
+        form.elements.points.focus();
+      };
+      document.getElementById('measureNew').onclick = () => {
+        editIndex = null;
+        picker.value = '';
+        fillMeasure();
+        form.elements.points.focus();
+      };
       form.addEventListener('submit', event => {
         event.preventDefault();
         const data = new FormData(form);
@@ -520,8 +569,8 @@
           notify('Informe ponto, peso em ct e medida maiores que zero, e um valor em dólar válido.');
           return;
         }
-        const editing = picker.value !== '';
-        const index = editing ? Number(picker.value) : DIAMOND_PRESETS.length;
+        const editing = editIndex !== null;
+        const index = editing ? editIndex : DIAMOND_PRESETS.length;
         const label = display(mm) + ' mm • ' + display(points) + ' pt • ' + display(ctUnit) + ' ct';
         const measure = {label, points, ctUnit, mm, usdCt};
         if (editing) {
@@ -543,6 +592,7 @@
         renderStones();
         calculateAll();
         refreshPicker(String(index));
+        editIndex = null;
         fillMeasure();
         notify(editing ? 'Alterações da medida salvas.' : 'Medida cadastrada e disponível em Gemas e Diamantes.');
       });
@@ -847,15 +897,194 @@
     function readStore(key,fallback){try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}}
     function writeStore(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){notify('Não foi possível salvar neste navegador. Exporte o histórico antes de fechar.');return false}}
     function snapshot(){return {fields:Object.fromEntries(fields.map(id=>[id,document.getElementById(id).value])),stones:structuredClone(stonesState),labor:structuredClone(laborState)}}
-    function restore(data){if(!data||!data.fields||!Array.isArray(data.stones)||!Array.isArray(data.labor))return;fields.forEach(id=>{if(data.fields[id]!==undefined)document.getElementById(id).value=data.fields[id]});stonesState=data.stones;laborState=data.labor;renderStones();renderLabor();calculateAll()}
-    function saveCurrentPiece(){calculateAll();const data=snapshot();const history=readStore('jewelHistory',[]);history.unshift({id:Date.now(),date:new Date().toLocaleDateString('pt-BR'),name:data.fields.pieceName||'Sem título',workshop:data.fields.workshopSelect,cost:document.getElementById('resCostTotal').innerText,price:document.getElementById('resSellingPrice').innerText,data});if(writeStore('jewelHistory',history)){loadHistory();notify('Peça salva. Use Reabrir para continuar editando.')}}
-    function loadHistory(){const history=readStore('jewelHistory',[]);const container=document.getElementById('historyList');container.innerHTML='';if(!history.length){container.textContent='Nenhuma peça salva ainda.';return}history.forEach((item,index)=>{const row=document.createElement('div');row.className='p-3 bg-navy-950 border border-slate-800 rounded-xl text-xs space-y-2';const title=document.createElement('strong');title.textContent=item.name;row.append(title);const detail=document.createElement('p');detail.textContent='Ateliê '+item.workshop+' • '+item.date+' • Venda: '+item.price+' • Custo: '+item.cost;row.append(detail);if(item.data){const open=document.createElement('button');open.textContent='Reabrir peça';open.className='text-gold-300 mr-4';open.onclick=()=>{restore(item.data);notify('Peça reaberta para edição.')};row.append(open)}const del=document.createElement('button');del.textContent='Excluir';del.className='text-rose-400';del.onclick=()=>{if(!confirm('Excluir esta peça do histórico?'))return;history.splice(index,1);if(writeStore('jewelHistory',history))loadHistory()};row.append(del);container.append(row)})}
+    function restore(data, persist = true){if(!data||!data.fields||!Array.isArray(data.stones)||!Array.isArray(data.labor))return;fields.forEach(id=>{if(data.fields[id]!==undefined)document.getElementById(id).value=data.fields[id]});stonesState=data.stones;laborState=data.labor;renderStones();renderLabor();if(persist)calculateAll();else originalCalculate()}
+    const viewNames = ['pricing', 'workshops', 'measures', 'saved'];
+    function showView(view) {
+      for (const name of viewNames) document.getElementById(name).hidden = name !== view;
+      for (const button of document.querySelectorAll('[data-view]')) {
+        if (button.dataset.view === view) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      }
+      document.getElementById('pricingActions').hidden = view !== 'pricing';
+      notify('');
+      if (view === 'saved') loadHistory();
+    }
+
+    function resetPricing() {
+      for (const id of fields) document.getElementById(id).value = '';
+      stonesState = [];
+      laborState = [];
+      renderStones();
+      renderLabor();
+      calculateAll();
+    }
+
+    function saveCurrentPiece() {
+      const data = snapshot();
+      if (!data.fields.pieceName.trim() || !data.fields.workshopSelect) {
+        notify('Informe o nome da peça e selecione o ateliê antes de salvar.');
+        return;
+      }
+      calculateAll();
+      const history = readStore('jewelHistory', []);
+      history.unshift({
+        id: Date.now(), date: new Date().toLocaleDateString('pt-BR', {timeZone:'America/Sao_Paulo'}),
+        name: data.fields.pieceName.trim(), workshop: data.fields.workshopSelect,
+        cost: document.getElementById('resCostTotal').innerText,
+        price: document.getElementById('resSellingPrice').innerText,
+        data, report: document.getElementById('printSheet').innerHTML
+      });
+      if (writeStore('jewelHistory', history)) {
+        resetPricing();
+        loadHistory();
+        notify('Peça salva. A precificação está pronta para uma nova ficha.');
+      }
+    }
+
+    function printSaved(item) {
+      const sheet = document.getElementById('printSheet');
+      let report = item.report;
+      if (!report && item.data) {
+        const draft = snapshot();
+        restore(structuredClone(item.data), false);
+        document.getElementById('printDate').textContent = item.date;
+        report = sheet.innerHTML;
+        restore(draft, false);
+      }
+      if (!report) {
+        const fallback = document.createElement('div');
+        for (const line of ['Ficha de Precificação', item.date, item.name, 'Ateliê: ' + item.workshop, 'Custo: ' + item.cost, 'Venda: ' + item.price]) {
+          const paragraph = document.createElement('p');
+          paragraph.textContent = line;
+          fallback.append(paragraph);
+        }
+        report = fallback.innerHTML;
+      }
+      const current = sheet.innerHTML;
+      sheet.innerHTML = report;
+      try { window.print(); }
+      finally { sheet.innerHTML = current; }
+    }
+
+    function loadHistory() {
+      const history = readStore('jewelHistory', []);
+      const filter = document.getElementById('historyWorkshop');
+      const selected = filter.value;
+      const workshops = [...new Set(history.map(item => item.workshop).filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+      filter.replaceChildren(new Option('Todos os ateliês', ''), ...workshops.map(name => new Option(name, name)));
+      filter.value = workshops.includes(selected) ? selected : '';
+      const container = document.getElementById('historyList');
+      container.replaceChildren();
+      history.forEach((item, index) => {
+        if (filter.value && item.workshop !== filter.value) return;
+        const row = document.createElement('div');
+        row.className = 'p-3 bg-navy-950 border border-slate-800 rounded-xl space-y-2';
+        const title = document.createElement('strong');
+        title.textContent = item.name;
+        const detail = document.createElement('p');
+        detail.className = 'text-sm text-slate-300';
+        detail.textContent = 'Ateliê ' + item.workshop + ' • ' + item.date + ' • Venda: ' + item.price + ' • Custo: ' + item.cost;
+        row.append(title, detail);
+        function action(label, callback, style = 'text-gold-300') {
+          const button = document.createElement('button');
+          button.textContent = label;
+          button.className = 'mr-4 text-sm ' + style;
+          button.onclick = callback;
+          row.append(button);
+        }
+        action('Imprimir ficha', () => printSaved(item));
+        if (item.data) action('Reabrir peça', () => {
+          showView('pricing');
+          restore(structuredClone(item.data));
+          notify('Peça reaberta para edição.');
+        });
+        action('Excluir', () => {
+          if (!confirm('Excluir esta peça do histórico?')) return;
+          history.splice(index, 1);
+          if (writeStore('jewelHistory', history)) loadHistory();
+        }, 'text-rose-400');
+        container.append(row);
+      });
+      if (!container.children.length) container.textContent = 'Nenhuma ficha encontrada.';
+    }
+
     function clearHistory(){if(confirm('Excluir todas as peças salvas?')){if(writeStore('jewelHistory',[]))loadHistory()}}
     function newPiece(){if(!confirm('Iniciar uma nova peça? Salve a atual no histórico para preservá-la.'))return;document.getElementById('pieceName').value='Nova peça';document.getElementById('metalWeight').value=0;document.getElementById('metalLoss').value=0;stonesState=[];laborState=[];renderStones();renderLabor();calculateAll();notify('Nova peça pronta para preencher.')}
     function exportHistory(){const history=readStore('jewelHistory',[]);if(!history.length){notify('Salve uma peça antes de exportar.');return}const cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';const csv='\ufeff'+[['Data','Peça','Ateliê','Custo','Venda'],...history.map(x=>[x.date,x.name,x.workshop,x.cost,x.price])].map(row=>row.map(cell).join(';')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='historico_joias.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
     const originalCalculate=calculateAll;
     calculateAll=function(){document.querySelectorAll('input[type=number]').forEach(el=>{el.min='0';if(Number(el.value)<0)el.value=0});originalCalculate();writeStore('jewelDraft',snapshot())};
-    window.onload=function(){refreshWorkshops();bindRegistries();const draft=readStore('jewelDraft',null);renderStones();renderLabor();loadHistory();if(draft)restore(draft);else calculateAll();document.querySelectorAll('input[id],select[id]').forEach(el=>el.addEventListener('input',calculateAll));document.querySelectorAll('label').forEach(label=>{const input=label.parentElement.querySelector('input,select');if(input&&input.id)label.htmlFor=input.id});document.querySelectorAll('button').forEach(b=>{if(!b.textContent.trim())b.setAttribute('aria-label','Remover item')})};
+    async function passwordDigest(password, salt) {
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+      const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:Uint8Array.from(salt), iterations:600000, hash:'SHA-256'}, key, 256);
+      return Array.from(new Uint8Array(bits), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function bindAccess() {
+      const form = document.getElementById('accessForm');
+      const access = document.getElementById('ddAccess');
+      const shell = document.getElementById('ddShell');
+      const intro = document.getElementById('accessIntro');
+      const submit = document.getElementById('accessSubmit');
+      const status = document.getElementById('accessStatus');
+      let account = readStore('ddLocalAccount', null);
+      function gate(signedIn) {
+        access.hidden = signedIn;
+        shell.hidden = !signedIn;
+        intro.textContent = account ? 'Entre com a conta deste navegador.' : 'Crie um usuário e uma senha de pelo menos 8 caracteres neste navegador.';
+        submit.textContent = account ? 'Entrar' : 'Criar conta local';
+        form.elements.password.autocomplete = account ? 'current-password' : 'new-password';
+        form.reset();
+        status.textContent = '';
+        if (!signedIn) form.elements.username.focus();
+      }
+      form.onsubmit = async event => {
+        event.preventDefault();
+        const username = form.elements.username.value.trim();
+        const password = form.elements.password.value;
+        if (!username) { status.textContent = 'Informe um usuário.'; return; }
+        submit.disabled = true;
+        try {
+          account = readStore('ddLocalAccount', null);
+          const salt = account?.salt ?? Array.from(crypto.getRandomValues(new Uint8Array(16)));
+          const digest = await passwordDigest(password, salt);
+          if (account && (username !== account.username || digest !== account.digest)) {
+            status.textContent = 'Usuário ou senha incorretos.';
+            return;
+          }
+          if (!account) {
+            const created = {username, salt, digest};
+            if (!writeStore('ddLocalAccount', created)) {
+              status.textContent = 'Este navegador não permitiu salvar a conta.';
+              return;
+            }
+            account = created;
+          }
+          gate(true);
+        } catch {
+          status.textContent = 'Não foi possível validar a senha neste navegador.';
+        } finally {
+          submit.disabled = false;
+        }
+      };
+      document.getElementById('accessLogout').onclick = () => gate(false);
+      gate(false);
+    }
+
+    window.onload = function() {
+      refreshWorkshops();
+      bindRegistries();
+      const draft = readStore('jewelDraft', null);
+      renderStones();
+      renderLabor();
+      if (draft) restore(draft);
+      else calculateAll();
+      for (const id of fields) document.getElementById(id).addEventListener('input', calculateAll);
+      for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => showView(button.dataset.view);
+      document.getElementById('historyWorkshop').onchange = loadHistory;
+      showView('pricing');
+      bindAccess();
+    };
   </script>
 </body>
 </html>
