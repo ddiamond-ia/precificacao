@@ -1152,7 +1152,7 @@
 
 
     function applyAdministratorPasswordUpdate() {
-      const revision = 'admin-password-2026-11-19';
+      const revision = 'admin-password-2026-11-19-v2';
       if (readStore('ddAdminPasswordRevision', '') === revision) return;
       const current = readStore('ddLocalAccount', null);
       const passwordRecord = {"salt":[99,72,45,109,83,168,29,246,234,162,47,2,114,157,11,19],"digest":"032a1db8cc4679a13b7fb380e3b8940ca6043e26d6526e76fc661d74305d2029"};
@@ -1176,7 +1176,7 @@
         access.hidden = signedIn;
         shell.hidden = !signedIn;
         const admin = readStore('ddLocalAccount', null);
-        intro.textContent = admin ? 'Entre com o nome e a senha.' : 'Crie a conta de administrador. A senha deve ter 6 caracteres, com letra, número e símbolo.';
+        intro.textContent = admin ? 'Administrador: entre com admin ou com o nome já cadastrado.' : 'Crie a conta de administrador. A senha deve ter 6 caracteres, com letra, número e símbolo.';
         submit.textContent = admin ? 'Entrar' : 'Criar administrador';
         form.elements.password.autocomplete = admin ? 'current-password' : 'new-password';
         form.reset();
@@ -1207,8 +1207,12 @@
             gate(true, true);
             return;
           }
-          const isAdmin = username === admin.username;
-          const account = isAdmin ? admin : readStore('ddLocalUsers', []).find(user => user.username === username);
+          const users = readStore('ddLocalUsers', []);
+          const normalizedName = username.toLocaleLowerCase('pt-BR');
+          const namedUser = users.find(user => user.username.toLocaleLowerCase('pt-BR') === normalizedName);
+          const isAdmin = normalizedName === admin.username.toLocaleLowerCase('pt-BR')
+            || (normalizedName === 'admin' && !namedUser);
+          const account = isAdmin ? admin : namedUser;
           if (!account || await passwordDigest(password, account.salt) !== account.digest) {
             status.textContent = 'Nome ou senha incorretos.';
             return;
